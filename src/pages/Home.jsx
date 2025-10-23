@@ -15,20 +15,44 @@ function Home() {
     date: 'newest'
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null); // New: Track errors
   const [adsVisible, setAdsVisible] = useState(true);
   const footerRef = useRef(null);
   const jobsPerPage = 12;
+
+  // Retry function for fetch errors
+  const retryFetch = async (url, maxRetries = 3) => {
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        const response = await fetch(url, {
+          method: 'GET',
+          mode: 'cors', // Explicitly enable CORS
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return await response.json();
+      } catch (err) {
+        if (i === maxRetries - 1) throw err; // Last retry failed
+        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1))); // Exponential backoff
+      }
+    }
+  };
 
   useEffect(() => {
     const fetchJobs = async () => {
       try {
         setLoading(true);
-        const response = await fetch('https://autopostnodejs.vercel.app/posts');
-        const data = await response.json();
+        setError(null);
+        const data = await retryFetch('https://autopostnodejs.vercel.app/posts');
         setJobs(data);
         setFilteredJobs(data);
       } catch (error) {
         console.error('Error fetching jobs:', error);
+        setError(error.message.includes('CORS') ? 'Connection blocked. Please check backend CORS settings.' : 'Failed to load jobs. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -36,6 +60,7 @@ function Home() {
     fetchJobs();
   }, []);
 
+  // Rest of your useEffects (filtering, observer) remain unchanged
   useEffect(() => {
     let filtered = jobs;
 
@@ -104,7 +129,27 @@ function Home() {
     setFilters({ ...filters, type });
   };
 
-  // Loading Skeleton
+  // Retry button handler
+  const handleRetry = () => {
+    setError(null);
+    setLoading(true);
+    // Re-run fetchJobs from useEffect deps, but trigger manually
+    const fetchJobs = async () => {
+      try {
+        const data = await retryFetch('https://autopostnodejs.vercel.app/posts');
+        setJobs(data);
+        setFilteredJobs(data);
+        setError(null);
+      } catch (error) {
+        setError('Retry failed. Ensure backend CORS is configured.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchJobs();
+  };
+
+  // Your existing SkeletonJob and Orb components remain unchanged
   const SkeletonJob = () => (
     <motion.div
       className="bg-white/10 backdrop-blur-2xl p-6 rounded-2xl shadow-lg border border-blue-500/20"
@@ -124,7 +169,6 @@ function Home() {
     </motion.div>
   );
 
-  // Animated Background Orbs
   const Orb = ({ className, delay }) => (
     <motion.div
       className={`absolute rounded-full blur-3xl opacity-20 ${className}`}
@@ -169,6 +213,42 @@ function Home() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 text-gray-100">
+        <Navbar />
+        <div className="container mx-auto px-6 py-16 flex-grow flex flex-col items-center justify-center">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center"
+          >
+            <div className="w-24 h-24 bg-gradient-to-br from-red-500/20 to-yellow-500/20 rounded-full mx-auto mb-6 flex items-center justify-center">
+              <span className="text-4xl">⚠️</span>
+            </div>
+            <h3 className="text-xl font-bold text-gray-100 mb-3">Unable to Load Jobs</h3>
+            <p className="text-gray-400 max-w-xl mx-auto mb-6">{error}</p>
+            <motion.button
+              onClick={handleRetry}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-medium shadow-lg hover:shadow-blue-500/25 transition-all duration-300"
+            >
+              Retry Loading Jobs
+            </motion.button>
+            <p className="text-sm text-gray-500 mt-4">
+              If the issue persists, check your backend CORS configuration.
+            </p>
+          </motion.div>
+        </div>
+        <div ref={footerRef}>
+          <Footer />
+        </div>
+      </div>
+    );
+  }
+
+  // Rest of your return JSX remains exactly the same (Hero, Filters, Job Tiles, Pagination, No Jobs, Ads, Footer)
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 text-gray-100">
       <Navbar />
@@ -360,7 +440,7 @@ function Home() {
           </motion.div>
         )}
 
-        {filteredJobs.length === 0 && !loading && (
+        {filteredJobs.length === 0 && !loading && !error && (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
