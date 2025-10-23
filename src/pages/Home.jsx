@@ -47,7 +47,7 @@ function Home() {
       try {
         setLoading(true);
         setError(null);
-        const data = await retryFetch('https://autopostnodejs.vercel.app/posts');
+        const data = await retryFetch('https://autopostnodejs-8aql.vercel.app/posts');
         setJobs(data);
         setFilteredJobs(data);
       } catch (error) {
@@ -136,7 +136,7 @@ function Home() {
     // Re-run fetchJobs from useEffect deps, but trigger manually
     const fetchJobs = async () => {
       try {
-        const data = await retryFetch('https://autopostnodejs.vercel.app/posts');
+        const data = await retryFetch('https://autopostnodejs-8aql.vercel.app/posts');
         setJobs(data);
         setFilteredJobs(data);
         setError(null);
