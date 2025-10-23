@@ -248,7 +248,6 @@ function Home() {
     );
   }
 
-  // Rest of your return JSX remains exactly the same (Hero, Filters, Job Tiles, Pagination, No Jobs, Ads, Footer)
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 text-gray-100">
       <Navbar />
@@ -395,16 +394,15 @@ function Home() {
                     </div>
                   </div>
                 </Link>
-                <motion.a
-                  href={job.description.match(/href='(.*?)'/)?.[1] || '#'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-medium text-sm shadow-lg hover:shadow-blue-500/25 transition-all duration-300"
-                >
-                  Apply Now
-                </motion.a>
+                <Link to={`/job/${job.id}`}>
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-medium text-sm shadow-lg hover:shadow-blue-500/25 transition-all duration-300"
+                  >
+                    Apply Now
+                  </motion.div>
+                </Link>
               </motion.div>
             ))}
           </div>
