@@ -15,7 +15,7 @@ function JobDetail() {
     const fetchJob = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`https://autopostnodejs-yqqc.vercel.app/posts/${id}`);
+        const response = await fetch(`https://autopostnodejs.vercel.app/posts/${id}`);
         const data = await response.json();
         setJob(data);
       } catch (error) {
