@@ -4,27 +4,41 @@ import Navbar from '../pages/Navbar';
 import Footer from '../pages/Footer';
 
 function ContactUs() {
-  const [adsVisible, setAdsVisible] = useState(true);
-  const footerRef = useRef(null);
+  const [formData, setFormData] = useState({ name: '', email: '', message: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState(null);
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setAdsVisible(!entry.isIntersecting);
-      },
-      { threshold: 0.1 }
-    );
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
-    if (footerRef.current) {
-      observer.observe(footerRef.current);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setSubmitStatus(null);
+
+    const response = await fetch('https://api.web3forms.com/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        access_key: '600d2cc0-b4bb-43df-b1ef-91fc6ed887e5',
+        name: formData.name,
+        email: formData.email,
+        message: formData.message,
+      }),
+    });
+
+    const json = await response.json();
+
+    if (json.success) {
+      setSubmitStatus('success');
+      setFormData({ name: '', email: '', message: '' });
+    } else {
+      setSubmitStatus('error');
     }
 
-    return () => {
-      if (footerRef.current) {
-        observer.unobserve(footerRef.current);
-      }
-    };
-  }, []);
+    setIsSubmitting(false);
+  };
 
   // Animated Background Orbs
   const Orb = ({ className, delay }) => (
@@ -83,60 +97,61 @@ function ContactUs() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <h3 className="text-xl font-semibold text-gray-100 mb-4">Contact Information</h3>
-              <p className="text-gray-400 mb-2"><strong>Email:</strong> support@jobplatform.com</p>
-              <p className="text-gray-400 mb-2"><strong>Phone:</strong> +1 (800) 123-4567</p>
+              <p className="text-gray-400 mb-2"><strong>Email:</strong> kishann.kkp@gmail.com</p>
               <p className="text-gray-400"><strong>Address:</strong> 123 Tech Lane, Bengaluru, India</p>
             </div>
             <div>
               <h3 className="text-xl font-semibold text-gray-100 mb-4">Send a Message</h3>
-              <div className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <input
                   type="text"
+                  name="name"
                   placeholder="Your Name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
                   className="w-full border border-white/20 bg-white/10 backdrop-blur-sm p-3 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/30 text-gray-100 placeholder-gray-400"
                 />
                 <input
                   type="email"
+                  name="email"
                   placeholder="Your Email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
                   className="w-full border border-white/20 bg-white/10 backdrop-blur-sm p-3 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/30 text-gray-100 placeholder-gray-400"
                 />
                 <textarea
+                  name="message"
                   placeholder="Your Message"
                   rows="4"
+                  value={formData.message}
+                  onChange={handleChange}
+                  required
                   className="w-full border border-white/20 bg-white/10 backdrop-blur-sm p-3 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/30 text-gray-100 placeholder-gray-400"
                 />
                 <motion.button
+                  type="submit"
+                  disabled={isSubmitting}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="w-full px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-medium text-sm shadow-lg hover:shadow-blue-500/25 transition-all duration-300"
+                  className="w-full px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-medium text-sm shadow-lg hover:shadow-blue-500/25 transition-all duration-300 disabled:opacity-50"
                 >
-                  Send Message
+                  {isSubmitting ? 'Sending...' : 'Send Message'}
                 </motion.button>
-              </div>
+                {submitStatus === 'success' && (
+                  <p className="text-green-400 text-sm">Message sent successfully!</p>
+                )}
+                {submitStatus === 'error' && (
+                  <p className="text-red-400 text-sm">Error sending message. Please try again.</p>
+                )}
+              </form>
             </div>
           </div>
         </motion.div>
       </div>
 
-      {/* Ad Placeholders */}
-      <motion.div
-        animate={{ opacity: adsVisible ? 1 : 0 }}
-        transition={{ duration: 0.3 }}
-        className="hidden lg:block fixed left-0 top-16 w-36 h-[80vh] bg-white/10 border-r border-blue-500/20 rounded-r-xl backdrop-blur-2xl flex items-center justify-center text-gray-300 text-xs font-medium"
-      >
-        Sponsored Ad
-      </motion.div>
-      <motion.div
-        animate={{ opacity: adsVisible ? 1 : 0 }}
-        transition={{ duration: 0.3 }}
-        className="hidden lg:block fixed right-0 top-16 w-36 h-[80vh] bg-white/10 border-l border-blue-500/20 rounded-l-xl backdrop-blur-2xl flex items-center justify-center text-gray-300 text-xs font-medium"
-      >
-        Sponsored Ad
-      </motion.div>
-
-      <div ref={footerRef}>
-        <Footer />
-      </div>
+      <Footer />
     </div>
   );
 }

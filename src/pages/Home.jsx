@@ -15,7 +15,7 @@ function Home() {
     date: 'newest'
   });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null); // New: Track errors
+  const [error, setError] = useState(null);
   const [adsVisible, setAdsVisible] = useState(true);
   const footerRef = useRef(null);
   const jobsPerPage = 12;
@@ -26,7 +26,7 @@ function Home() {
       try {
         const response = await fetch(url, {
           method: 'GET',
-          mode: 'cors', // Explicitly enable CORS
+          mode: 'cors',
           headers: {
             'Content-Type': 'application/json'
           }
@@ -36,31 +36,48 @@ function Home() {
         }
         return await response.json();
       } catch (err) {
-        if (i === maxRetries - 1) throw err; // Last retry failed
-        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1))); // Exponential backoff
+        if (i === maxRetries - 1) throw err;
+        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
       }
     }
   };
 
-  useEffect(() => {
-    const fetchJobs = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await retryFetch('https://autopostnodejs-8aql.vercel.app/posts');
-        setJobs(data);
-        setFilteredJobs(data);
-      } catch (error) {
-        console.error('Error fetching jobs:', error);
-        setError(error.message.includes('CORS') ? 'Connection blocked. Please check backend CORS settings.' : 'Failed to load jobs. Please try again.');
-      } finally {
-        setLoading(false);
+  // Fetch all pages to get complete dataset
+  const fetchAllJobs = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      let allJobs = [];
+      let page = 1;
+      let hasMore = true;
+
+      while (hasMore) {
+        const url = `https://autopostnodejs-yqqc.vercel.app/posts?page=${page}&limit=${jobsPerPage}`;
+        const data = await retryFetch(url);
+        
+        if (!data.data || !Array.isArray(data.data)) {
+          throw new Error('Invalid API response: No jobs data found');
+        }
+
+        allJobs = [...allJobs, ...data.data];
+        hasMore = page < data.totalPages;
+        page++;
       }
-    };
-    fetchJobs();
+
+      setJobs(allJobs);
+      setFilteredJobs(allJobs);
+    } catch (error) {
+      console.error('Error fetching jobs:', error);
+      setError(error.message.includes('CORS') ? 'Connection blocked. Please check backend CORS settings.' : 'Failed to load jobs. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAllJobs();
   }, []);
 
-  // Rest of your useEffects (filtering, observer) remain unchanged
   useEffect(() => {
     let filtered = jobs;
 
@@ -118,6 +135,7 @@ function Home() {
   const indexOfLastJob = currentPage * jobsPerPage;
   const indexOfFirstJob = indexOfLastJob - jobsPerPage;
   const currentJobs = filteredJobs.slice(indexOfFirstJob, indexOfLastJob);
+  const totalPages = Math.ceil(filteredJobs.length / jobsPerPage);
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
@@ -129,27 +147,12 @@ function Home() {
     setFilters({ ...filters, type });
   };
 
-  // Retry button handler
   const handleRetry = () => {
     setError(null);
     setLoading(true);
-    // Re-run fetchJobs from useEffect deps, but trigger manually
-    const fetchJobs = async () => {
-      try {
-        const data = await retryFetch('https://autopostnodejs-8aql.vercel.app/posts');
-        setJobs(data);
-        setFilteredJobs(data);
-        setError(null);
-      } catch (error) {
-        setError('Retry failed. Ensure backend CORS is configured.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchJobs();
+    fetchAllJobs();  // Reuse the updated fetch function
   };
 
-  // Your existing SkeletonJob and Orb components remain unchanged
   const SkeletonJob = () => (
     <motion.div
       className="bg-white/10 backdrop-blur-2xl p-6 rounded-2xl shadow-lg border border-blue-500/20"
@@ -415,10 +418,29 @@ function Home() {
             animate={{ opacity: 1, y: 0 }}
             className="mt-10 flex justify-center"
           >
-            <div className="bg-white/10 backdrop-blur-xl p-3 rounded-xl shadow-lg border border-blue-500/20 flex space-x-2">
-              {Array.from(
-                { length: Math.ceil(filteredJobs.length / jobsPerPage) },
-                (_, i) => (
+            <div className="bg-white/10 backdrop-blur-xl p-3 rounded-xl shadow-lg border border-blue-500/20 flex space-x-2 items-center">
+              {/* Previous Button */}
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => currentPage > 1 && paginate(currentPage - 1)}
+                disabled={currentPage === 1}
+                className={`px-3 py-2 rounded-lg font-medium text-sm transition-all duration-300 flex items-center ${
+                  currentPage === 1
+                    ? 'text-gray-500 cursor-not-allowed'
+                    : 'text-gray-400 hover:bg-white/20'
+                }`}
+              >
+                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Prev
+              </motion.button>
+
+              {/* Page Numbers */}
+              {totalPages <= 10 ? (
+                // Show all if <=10
+                Array.from({ length: totalPages }, (_, i) => (
                   <motion.button
                     key={i}
                     whileHover={{ scale: 1.1 }}
@@ -432,7 +454,99 @@ function Home() {
                   >
                     {i + 1}
                   </motion.button>
-                )
+                ))
+              ) : (
+                // Show truncated if >10
+                <>
+                  {/* First 5 pages */}
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => (
+                    <motion.button
+                      key={`first-${i}`}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => paginate(i + 1)}
+                      className={`px-5 py-2 rounded-lg font-medium text-sm transition-all duration-300 ${
+                        currentPage === i + 1
+                          ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/25'
+                          : 'bg-white/10 text-gray-400 hover:bg-white/20'
+                      }`}
+                    >
+                      {i + 1}
+                    </motion.button>
+                  ))}
+
+                  {/* Ellipsis if needed */}
+                  {totalPages > 5 && currentPage <= 5 && (
+                    <span className="px-3 py-2 text-gray-400">...</span>
+                  )}
+
+                  {/* Last 5 pages if current is near end, but for simplicity, show ellipsis then Next/Last */}
+                  {currentPage > 5 && totalPages > 10 && (
+                    <>
+                      <span className="px-3 py-2 text-gray-400">...</span>
+                      {/* Show current and neighbors if in middle */}
+                      {Array.from({ length: 5 }, (_, i) => {
+                        const page = totalPages - 4 + i;
+                        if (page >= 6 && page <= totalPages) {
+                          return (
+                            <motion.button
+                              key={`last-${i}`}
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => paginate(page)}
+                              className={`px-5 py-2 rounded-lg font-medium text-sm transition-all duration-300 ${
+                                currentPage === page
+                                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/25'
+                                  : 'bg-white/10 text-gray-400 hover:bg-white/20'
+                              }`}
+                            >
+                              {page}
+                            </motion.button>
+                          );
+                        }
+                        return null;
+                      })}
+                    </>
+                  )}
+                </>
+              )}
+
+              {/* Next Button */}
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => currentPage < totalPages && paginate(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className={`px-3 py-2 rounded-lg font-medium text-sm transition-all duration-300 flex items-center ${
+                  currentPage === totalPages
+                    ? 'text-gray-500 cursor-not-allowed'
+                    : 'text-gray-400 hover:bg-white/20'
+                }`}
+              >
+                Next
+                <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </motion.button>
+
+              {/* Last Button if >10 pages */}
+              {totalPages > 10 && (
+                <>
+                  <span className="px-2 text-gray-400">|</span>
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => currentPage !== totalPages && paginate(totalPages)}
+                    disabled={currentPage === totalPages}
+                    className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-300 ${
+                      currentPage === totalPages
+                        ? 'text-gray-500 cursor-not-allowed'
+                        : 'text-gray-400 hover:bg-white/20'
+                    }`}
+                  >
+                    Last &gt;
+                  </motion.button>
+                </>
               )}
             </div>
           </motion.div>

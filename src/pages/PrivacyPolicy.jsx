@@ -1,31 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef } from 'react';
 import { motion } from 'framer-motion';
 import Navbar from '../pages/Navbar';
 import Footer from '../pages/Footer';
 
 function PrivacyPolicy() {
-  const [adsVisible, setAdsVisible] = useState(true);
-  const footerRef = useRef(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setAdsVisible(!entry.isIntersecting);
-      },
-      { threshold: 0.1 }
-    );
-
-    if (footerRef.current) {
-      observer.observe(footerRef.current);
-    }
-
-    return () => {
-      if (footerRef.current) {
-        observer.unobserve(footerRef.current);
-      }
-    };
-  }, []);
-
   // Animated Background Orbs
   const Orb = ({ className, delay }) => (
     <motion.div
@@ -76,65 +54,73 @@ function PrivacyPolicy() {
           transition={{ delay: 0.2 }}
           className="bg-white/10 backdrop-blur-2xl p-8 rounded-2xl shadow-lg border border-blue-500/20 max-w-4xl mx-auto prose prose-lg text-gray-300"
         >
-          <h2 className="text-2xl font-bold text-gray-100 mb-4">Introduction</h2>
+          <h2 className="text-2xl font-bold text-gray-100 mb-4">Privacy Policy</h2>
           <p className="mb-6">
-            This Privacy Policy explains how we collect, use, and protect your personal information when you use our job search platform. By using our services, you agree to the terms outlined below.
+            At FirstJobly, accessible from https://www.firstjobly.in/, one of our main priorities is the privacy of our visitors. This Privacy Policy document outlines the types of information that are collected and recorded by us and how we use it.
           </p>
-          <h2 className="text-2xl font-bold text-gray-100 mb-4">Information We Collect</h2>
+          
+          <h2 className="text-2xl font-bold text-gray-100 mb-4">1. Information We Collect</h2>
           <p className="mb-6">
-            We may collect the following types of information:
+            When you visit our website or use our tools (such as the Website Audit, Backlinks Checker, Article Rewriter, Meta Description Maker, Keyword Position Checker, and Sitemap Generator), we may collect the following information:
           </p>
           <ul className="list-disc list-inside mb-6">
-            <li>Personal details (e.g., name, email) provided during inquiries.</li>
-            <li>Usage data (e.g., pages visited, search queries) to improve our services.</li>
-            <li>Cookies to enhance your browsing experience.</li>
+            <li><strong>Personal Information:</strong> When you fill out forms or interact with our tools, we may collect personal information such as your name, email address, or other contact details.</li>
+            <li><strong>Non-personal Information:</strong> This may include information such as IP addresses, browser types, device information, and site usage data that helps us improve the performance and functionality of our site and services.</li>
           </ul>
-          <h2 className="text-2xl font-bold text-gray-100 mb-4">How We Use Your Information</h2>
+          
+          <h2 className="text-2xl font-bold text-gray-100 mb-4">2. How We Use Your Information</h2>
           <p className="mb-6">
-            Your information is used to:
+            We use the information we collect in the following ways:
           </p>
           <ul className="list-disc list-inside mb-6">
-            <li>Provide personalized job recommendations.</li>
-            <li>Respond to your inquiries and support requests.</li>
-            <li>Analyze platform usage to improve functionality.</li>
+            <li>To provide and maintain our services (such as running the SEO tools you use).</li>
+            <li>To improve, personalize, and optimize your experience on our website.</li>
+            <li>To analyze trends and site usage.</li>
+            <li>To send you important updates about our tools and services (if you have opted in to receive them).</li>
+            <li>To comply with legal obligations and resolve any disputes.</li>
           </ul>
-          <h2 className="text-2xl font-bold text-gray-100 mb-4">Data Sharing and Security</h2>
+          
+          <h2 className="text-2xl font-bold text-gray-100 mb-4">3. Cookies and Tracking Technologies</h2>
           <p className="mb-6">
-            We do not sell your personal information. We may share data with trusted partners for operational purposes, such as analytics or email services, under strict confidentiality agreements. We implement industry-standard security measures to protect your data.
+            We use cookies and other tracking technologies to enhance your experience on our website. Cookies help us track your preferences and actions on our website, enabling us to provide a better user experience. You can choose to disable cookies through your browser settings, but this may affect your ability to use certain features of our website.
           </p>
-          <h2 className="text-2xl font-bold text-gray-100 mb-4">Your Rights</h2>
+          
+          <h2 className="text-2xl font-bold text-gray-100 mb-4">4. Third-Party Services</h2>
           <p className="mb-6">
-            You have the right to access, update, or delete your personal information. Contact us at support@jobplatform.com to exercise these rights.
+            We may use third-party tools and services, such as analytics providers, advertising partners, or social media integration. These third parties may have access to your data as necessary to perform their services but are obligated not to disclose or use it for any other purpose.
           </p>
-          <h2 className="text-2xl font-bold text-gray-100 mb-4">Changes to This Policy</h2>
-          <p>
-            We may update this Privacy Policy periodically. Changes will be posted on this page with an updated effective date.
+          
+          <h2 className="text-2xl font-bold text-gray-100 mb-4">5. Data Security</h2>
+          <p className="mb-6">
+            We take reasonable precautions to protect the information you provide on our website. However, please be aware that no method of transmission over the internet is 100% secure. We cannot guarantee absolute security, but we make every effort to keep your data safe.
           </p>
+          
+          <h2 className="text-2xl font-bold text-gray-100 mb-4">6. Your Rights</h2>
+          <p className="mb-6">
+            You have the right to access, update, or delete your personal information at any time. If you wish to exercise these rights or have any concerns regarding your personal data, please contact us at kishann.kkp@gmail.com.
+          </p>
+          
+          <h2 className="text-2xl font-bold text-gray-100 mb-4">7. Changes to This Privacy Policy</h2>
+          <p className="mb-6">
+            We may update this Privacy Policy from time to time. When we do, we will post the updated policy on this page with a new "Effective Date." We encourage you to review this policy periodically to stay informed about how we are protecting your information.
+          </p>
+          
+          <h2 className="text-2xl font-bold text-gray-100 mb-4">8. Contact Us</h2>
+          <p className="mb-6">
+            If you have any questions or concerns about this Privacy Policy or how we handle your data, please feel free to contact us at:
+          </p>
+          <ul className="list-disc list-inside mb-6">
+            <li><strong>Email:</strong> kishann.kkp@gmail.com</li>
+            <li><strong>Address:</strong> Lucknow Uttar Pradesh</li>
+          </ul>
+          
           <p className="mt-6 text-sm text-gray-400">
-            <strong>Effective Date:</strong> October 23, 2025
+            <strong>Effective Date:</strong> October 26, 2025
           </p>
         </motion.div>
       </div>
 
-      {/* Ad Placeholders */}
-      <motion.div
-        animate={{ opacity: adsVisible ? 1 : 0 }}
-        transition={{ duration: 0.3 }}
-        className="hidden lg:block fixed left-0 top-16 w-36 h-[80vh] bg-white/10 border-r border-blue-500/20 rounded-r-xl backdrop-blur-2xl flex items-center justify-center text-gray-300 text-xs font-medium"
-      >
-        Sponsored Ad
-      </motion.div>
-      <motion.div
-        animate={{ opacity: adsVisible ? 1 : 0 }}
-        transition={{ duration: 0.3 }}
-        className="hidden lg:block fixed right-0 top-16 w-36 h-[80vh] bg-white/10 border-l border-blue-500/20 rounded-l-xl backdrop-blur-2xl flex items-center justify-center text-gray-300 text-xs font-medium"
-      >
-        Sponsored Ad
-      </motion.div>
-
-      <div ref={footerRef}>
-        <Footer />
-      </div>
+      <Footer />
     </div>
   );
 }
