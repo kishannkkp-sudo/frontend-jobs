@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Helmet } from 'react-helmet-async';
 import Navbar from '../pages/Navbar';
 import Footer from '../pages/Footer';
 
@@ -191,6 +192,13 @@ function Home() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 text-gray-100">
+        <Helmet>
+          <title>Loading Jobs | AI-Powered Job Board</title>
+          <meta name="description" content="Discover thousands of verified job openings tailored to your skills. Loading the best opportunities for you." />
+          <meta property="og:title" content="Loading Jobs | AI-Powered Job Board" />
+          <meta property="og:description" content="Discover thousands of verified job openings tailored to your skills. Loading the best opportunities for you." />
+          <meta property="og:type" content="website" />
+        </Helmet>
         <Navbar />
         <div className="container mx-auto px-6 py-16 flex-grow flex flex-col items-center justify-center">
           <motion.div
@@ -218,6 +226,13 @@ function Home() {
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 text-gray-100">
+        <Helmet>
+          <title>Error Loading Jobs | AI-Powered Job Board</title>
+          <meta name="description" content="Unable to load jobs at the moment. Please try again or check your connection." />
+          <meta property="og:title" content="Error Loading Jobs | AI-Powered Job Board" />
+          <meta property="og:description" content="Unable to load jobs at the moment. Please try again or check your connection." />
+          <meta property="og:type" content="website" />
+        </Helmet>
         <Navbar />
         <div className="container mx-auto px-6 py-16 flex-grow flex flex-col items-center justify-center">
           <motion.div
@@ -283,6 +298,13 @@ function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 text-gray-100">
+      <Helmet>
+        <title>Find Your Dream Job with AI Precision | AI-Powered Job Board</title>
+        <meta name="description" content="Discover thousands of verified job openings tailored to your skills. Search, filter, and apply to your next opportunity." />
+        <meta property="og:title" content="Find Your Dream Job with AI Precision | AI-Powered Job Board" />
+        <meta property="og:description" content="Discover thousands of verified job openings tailored to your skills. Search, filter, and apply to your next opportunity." />
+        <meta property="og:type" content="website" />
+      </Helmet>
       <Navbar />
       <div className="mx-auto max-w-[1600px] px-6 pt-16 pb-8 flex-grow relative overflow-hidden lg:px-40">
 

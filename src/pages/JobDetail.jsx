@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { Helmet } from 'react-helmet-async';
 import Navbar from '../pages/Navbar';
 import Footer from '../pages/Footer';
 
@@ -49,6 +50,13 @@ function JobDetail() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 text-gray-100">
+        <Helmet>
+          <title>Loading Job Details | AI-Powered Job Board</title>
+          <meta name="description" content="Loading job details. Get all the important information about this opportunity." />
+          <meta property="og:title" content="Loading Job Details | AI-Powered Job Board" />
+          <meta property="og:description" content="Loading job details. Get all the important information about this opportunity." />
+          <meta property="og:type" content="website" />
+        </Helmet>
         <Navbar />
         <div className="container mx-auto px-6 py-20 flex-grow flex items-center justify-center">
           <motion.div
@@ -78,6 +86,13 @@ function JobDetail() {
   if (!job) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 text-gray-100">
+        <Helmet>
+          <title>Job Not Found | AI-Powered Job Board</title>
+          <meta name="description" content="The job you're looking for could not be found. Return to the job listings." />
+          <meta property="og:title" content="Job Not Found | AI-Powered Job Board" />
+          <meta property="og:description" content="The job you're looking for could not be found. Return to the job listings." />
+          <meta property="og:type" content="website" />
+        </Helmet>
         <Navbar />
         <div className="mx-auto max-w-[1600px] px-6 py-20 flex-grow flex items-center justify-center">
           <motion.div
@@ -105,9 +120,18 @@ function JobDetail() {
   }
 
   const applyLink = job.description.match(/href='(.*?)'/)?.[1] || '#';
+  const postDate = new Date(job.created_at).toLocaleDateString();
+  const metaDescription = job.description.replace(/<[^>]*>/g, '').substring(0, 160) + '...';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 text-gray-100">
+      <Helmet>
+        <title>{`${job.title} at ${job.company_name} - Posted ${postDate} | AI-Powered Job Board`}</title>
+        <meta name="description" content={`${job.title} at ${job.company_name}. Posted on ${postDate}. ${metaDescription}`} />
+        <meta property="og:title" content={`${job.title} at ${job.company_name} - Posted ${postDate} | AI-Powered Job Board`} />
+        <meta property="og:description" content={`${job.title} at ${job.company_name}. Posted on ${postDate}. ${metaDescription}`} />
+        <meta property="og:type" content="website" />
+      </Helmet>
       <Navbar />
       <div className="container mx-auto px-6 py-20 flex-grow relative lg:px-40">
         <motion.div
@@ -142,7 +166,7 @@ function JobDetail() {
                 {job.company_logo ? (
                   <motion.img
                     src={job.company_logo}
-                    alt="Company Logo"
+                    alt={`${job.company_name} Logo`}
                     className="w-20 h-20 lg:w-24 lg:h-24 rounded-2xl shadow-lg mr-6 flex-shrink-0"
                     whileHover={{ scale: 1.05, rotate: 2 }}
                   />
@@ -154,7 +178,7 @@ function JobDetail() {
                 <div>
                   <h1 className="text-3xl lg:text-4xl font-bold text-gray-100 leading-tight">{job.title}</h1>
                   <p className="text-sm text-gray-400 mt-2">
-                    Posted on {new Date(job.created_at).toLocaleDateString()}
+                    Posted on {postDate}
                   </p>
                   <p className="text-sm text-gray-400">
                     {job.description.match(/Locations: (.*?)(?=<br>|$)/i)?.[1] || 'Location not specified'}
