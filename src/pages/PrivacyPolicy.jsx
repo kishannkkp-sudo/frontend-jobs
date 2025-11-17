@@ -1,128 +1,146 @@
-import { useRef } from 'react';
-import { motion } from 'framer-motion';
-import Navbar from '../pages/Navbar';
-import Footer from '../pages/Footer';
+// src/pages/PrivacyPolicy.jsx
+import React from 'react';
+import { Helmet } from 'react-helmet-async';
+import Navbar from './Navbar';
+import Footer from './Footer';
 
-function PrivacyPolicy() {
-  // Animated Background Orbs
-  const Orb = ({ className, delay }) => (
-    <motion.div
-      className={`absolute rounded-full blur-3xl opacity-20 ${className}`}
-      animate={{
-        y: [0, -20, 0],
-        scale: [1, 1.1, 1],
-        opacity: [0.2, 0.3, 0.2]
-      }}
-      transition={{
-        duration: 5,
-        repeat: Infinity,
-        repeatType: 'loop',
-        delay
-      }}
-    />
-  );
-
+const PrivacyPolicy = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 text-gray-100">
+    <>
+      <Helmet>
+        <title>Privacy Policy | FirstJobly - Latest Jobs in India 2025</title>
+        <meta name="description" content="Read FirstJobly's Privacy Policy to understand how we collect, use, and protect your personal information when you visit https://www.firstjobly.in/" />
+        <meta property="og:title" content="Privacy Policy - FirstJobly" />
+        <meta property="og:description" content="We respect your privacy. Learn how FirstJobly collects and uses your data." />
+        <link rel="canonical" href="https://www.firstjobly.in/privacy-policy" />
+      </Helmet>
+
       <Navbar />
-      <div className="container mx-auto px-6 py-20 flex-grow relative overflow-hidden lg:px-40">
-        {/* Animated Background Orbs */}
-        <Orb className="w-64 h-64 bg-blue-500 left-10 top-20" delay={0} />
-        <Orb className="w-80 h-80 bg-purple-500 right-20 top-40" delay={1} />
-        <Orb className="w-48 h-48 bg-pink-500 left-40 bottom-20" delay={2} />
 
-        {/* Content */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-10 relative z-10"
-        >
-          <h1 className="text-4xl md:text-6xl font-bold text-gray-100 mb-4 leading-tight">
-            Privacy Policy{' '}
-            <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-500 bg-clip-text text-transparent">
-              Your Data, Our Priority
-            </span>
-          </h1>
-          <p className="text-lg text-gray-400 max-w-2xl mx-auto">
-            We are committed to protecting your privacy and handling your data responsibly.
-          </p>
-        </motion.div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900/20 to-violet-900 pt-20 pb-16">
+        <div className="max-w-4xl mx-auto px-5 sm:px-8 lg:px-10 py-12">
+          
+          <div className="text-center mb-16">
+            <h1 className="text-4xl sm:text-5xl font-extrabold text-white mb-6">
+              Privacy Policy for <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500">FirstJobly</span>
+            </h1>
+            <p className="text-lg text-gray-300 max-w-2xl mx-auto">
+              Last Updated: November 17, 2025
+            </p>
+          </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-white/10 backdrop-blur-2xl p-8 rounded-2xl shadow-lg border border-blue-500/20 max-w-4xl mx-auto prose prose-lg text-gray-300"
-        >
-          <h2 className="text-2xl font-bold text-gray-100 mb-4">Privacy Policy</h2>
-          <p className="mb-6">
-            At FirstJobly, accessible from https://www.firstjobly.in/, one of our main priorities is the privacy of our visitors. This Privacy Policy document outlines the types of information that are collected and recorded by us and how we use it.
-          </p>
-          
-          <h2 className="text-2xl font-bold text-gray-100 mb-4">1. Information We Collect</h2>
-          <p className="mb-6">
-            When you visit our website or use our tools (such as the Website Audit, Backlinks Checker, Article Rewriter, Meta Description Maker, Keyword Position Checker, and Sitemap Generator), we may collect the following information:
-          </p>
-          <ul className="list-disc list-inside mb-6">
-            <li><strong>Personal Information:</strong> When you fill out forms or interact with our tools, we may collect personal information such as your name, email address, or other contact details.</li>
-            <li><strong>Non-personal Information:</strong> This may include information such as IP addresses, browser types, device information, and site usage data that helps us improve the performance and functionality of our site and services.</li>
-          </ul>
-          
-          <h2 className="text-2xl font-bold text-gray-100 mb-4">2. How We Use Your Information</h2>
-          <p className="mb-6">
-            We use the information we collect in the following ways:
-          </p>
-          <ul className="list-disc list-inside mb-6">
-            <li>To provide and maintain our services (such as running the SEO tools you use).</li>
-            <li>To improve, personalize, and optimize your experience on our website.</li>
-            <li>To analyze trends and site usage.</li>
-            <li>To send you important updates about our tools and services (if you have opted in to receive them).</li>
-            <li>To comply with legal obligations and resolve any disputes.</li>
-          </ul>
-          
-          <h2 className="text-2xl font-bold text-gray-100 mb-4">3. Cookies and Tracking Technologies</h2>
-          <p className="mb-6">
-            We use cookies and other tracking technologies to enhance your experience on our website. Cookies help us track your preferences and actions on our website, enabling us to provide a better user experience. You can choose to disable cookies through your browser settings, but this may affect your ability to use certain features of our website.
-          </p>
-          
-          <h2 className="text-2xl font-bold text-gray-100 mb-4">4. Third-Party Services</h2>
-          <p className="mb-6">
-            We may use third-party tools and services, such as analytics providers, advertising partners, or social media integration. These third parties may have access to your data as necessary to perform their services but are obligated not to disclose or use it for any other purpose.
-          </p>
-          
-          <h2 className="text-2xl font-bold text-gray-100 mb-4">5. Data Security</h2>
-          <p className="mb-6">
-            We take reasonable precautions to protect the information you provide on our website. However, please be aware that no method of transmission over the internet is 100% secure. We cannot guarantee absolute security, but we make every effort to keep your data safe.
-          </p>
-          
-          <h2 className="text-2xl font-bold text-gray-100 mb-4">6. Your Rights</h2>
-          <p className="mb-6">
-            You have the right to access, update, or delete your personal information at any time. If you wish to exercise these rights or have any concerns regarding your personal data, please contact us at kishann.kkp@gmail.com.
-          </p>
-          
-          <h2 className="text-2xl font-bold text-gray-100 mb-4">7. Changes to This Privacy Policy</h2>
-          <p className="mb-6">
-            We may update this Privacy Policy from time to time. When we do, we will post the updated policy on this page with a new "Effective Date." We encourage you to review this policy periodically to stay informed about how we are protecting your information.
-          </p>
-          
-          <h2 className="text-2xl font-bold text-gray-100 mb-4">8. Contact Us</h2>
-          <p className="mb-6">
-            If you have any questions or concerns about this Privacy Policy or how we handle your data, please feel free to contact us at:
-          </p>
-          <ul className="list-disc list-inside mb-6">
-            <li><strong>Email:</strong> kishann.kkp@gmail.com</li>
-            <li><strong>Address:</strong> Lucknow Uttar Pradesh</li>
-          </ul>
-          
-          <p className="mt-6 text-sm text-gray-400">
-            <strong>Effective Date:</strong> October 26, 2025
-          </p>
-        </motion.div>
+          <div className="bg-white/8 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/10 p-8 sm:p-12 space-y-10 text-gray-200 leading-relaxed">
+            
+            <section>
+              <p className="text-lg">
+                One of our top priorities at <strong>FirstJobly</strong>, accessible from <a href="https://www.firstjobly.in" className="text-cyan-400 hover:underline" target="_blank" rel="noopener noreferrer">https://www.firstjobly.in</a>, is the privacy of our visitors. This Privacy Policy document outlines the types of information that is collected and recorded by <strong>FirstJobly</strong> and how we use it.
+              </p>
+              <p className="mt-4">
+                If you have additional questions or require more information about our Privacy Policy, do not hesitate to <a href="/contact-us" className="text-cyan-400 hover:underline">contact us</a>.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-bold text-white mb-4">Consent</h2>
+              <p>
+                By using our website <a href="https://www.firstjobly.in" className="text-cyan-400 hover:underline">https://www.firstjobly.in</a>, you hereby consent to our Privacy Policy and agree to its terms.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-bold text-white mb-4">Information We Collect</h2>
+              <p>
+                The personal information you are asked to provide, and the reasons why you are asked to provide it, will be made clear to you at the point we ask you to provide your personal information.
+              </p>
+              <p className="mt-3">
+                If you contact us directly, we may receive additional information about you such as your name, email address, phone number, the contents of the message and/or attachments you may send us, and any other information you may choose to provide.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-bold text-white mb-4">How We Use Your Information</h2>
+              <p>We use the information we collect in various ways, including to:</p>
+              <ul className="mt-4 space-y-2 list-disc list-inside text-gray-300">
+                <li>Provide, operate, and maintain our website</li>
+                <li>Improve, personalize, and expand our website</li>
+                <li>Understand and analyze how you use our website</li>
+                <li>Develop new features, services, and functionality</li>
+                <li>Communicate with you for customer service, updates, and marketing purposes</li>
+                <li>Send you emails</li>
+                <li>Find and prevent fraud</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-bold text-white mb-4">Log Files</h2>
+              <p>
+                FirstJobly follows a standard procedure of using log files. These files log visitors when they visit websites. The information collected includes IP addresses, browser type, Internet Service Provider (ISP), date and time stamp, referring/exit pages, and possibly the number of clicks. This data is not linked to any personally identifiable information and is used for analyzing trends, administering the site, and gathering demographic information.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-bold text-white mb-4">Cookies and Web Beacons</h2>
+              <p>
+                Like most websites, <strong>FirstJobly</strong> uses "cookies" to enhance user experience. These cookies store information including visitors' preferences and the pages they visited. This helps us optimize content based on browser type and other visitor information.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-bold text-white mb-4">Advertising Partners</h2>
+              <p>
+                Third-party ad servers or ad networks (such as Google AdSense) may use technologies like cookies, JavaScript, or Web Beacons in their advertisements. These are sent directly to your browser and automatically receive your IP address. These technologies measure the effectiveness of advertising campaigns.
+              </p>
+              <p className="mt-3">
+                Note that <strong>FirstJobly</strong> has no access to or control over these cookies used by third-party advertisers.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-bold text-white mb-4">Third-Party Privacy Policies</h2>
+              <p>
+                FirstJobly's Privacy Policy does not apply to other advertisers or websites. We recommend reviewing the respective Privacy Policies of these third-party ad servers for more detailed information.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-bold text-white mb-4">CCPA & GDPR Privacy Rights</h2>
+              <p>Under CCPA (California) and GDPR (EU), you have the right to:</p>
+              <ul className="mt-4 space-y-2 list-disc list-inside text-gray-300">
+                <li>Request access to your personal data</li>
+                <li>Request correction of inaccurate data</li>
+                <li>Request deletion of your data</li>
+                <li>Object to or restrict processing of your data</li>
+                <li>Request data portability</li>
+              </ul>
+              <p className="mt-4">
+                We will respond to any valid request within one month. To exercise these rights, please <a href="/contact-us" className="text-cyan-400 hover:underline">contact us</a>.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-bold text-white mb-4">Children's Information</h2>
+              <p>
+                Protecting children online is a top priority. We do not knowingly collect personal information from children under 13 years of age. If you believe your child has provided such information on our site, please contact us immediately, and we will remove it promptly.
+              </p>
+            </section>
+
+            <div className="border-t border-white/20 pt-8 text-center">
+              <p className="text-gray-400">
+                Thank you for trusting <strong className="text-cyan-300">FirstJobly</strong> — Your career journey starts here.
+              </p>
+              <p className="mt-4">
+                <a href="https://www.firstjobly.in" className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500">
+                  www.firstjobly.in
+                </a>
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       <Footer />
-    </div>
+    </>
   );
-}
+};
 
 export default PrivacyPolicy;
