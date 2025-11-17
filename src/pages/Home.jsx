@@ -1,597 +1,258 @@
-import React, { useState, useEffect, useRef } from 'react';
+// src/pages/Home.jsx
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
-import Navbar from '../pages/Navbar';
-import Footer from '../pages/Footer';
+import Navbar from './Navbar';
+import Footer from './Footer';
+
+const BACKEND_URL = 'https://backendjobs-tau.vercel.app/posts';
+const JOBS_PER_PAGE = 24;
 
 function Home() {
   const [jobs, setJobs] = useState([]);
-  const [filteredJobs, setFilteredJobs] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [filters, setFilters] = useState({
-    search: '',
-    type: '',
-    location: '',
-    date: 'newest'
-  });
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalJobs, setTotalJobs] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null); // New: Track errors
-  const [adsVisible, setAdsVisible] = useState(true);
-  const footerRef = useRef(null);
-  const jobsPerPage = 12;
 
-  // Retry function for fetch errors
-  const retryFetch = async (url, maxRetries = 3) => {
-    for (let i = 0; i < maxRetries; i++) {
-      try {
-        const response = await fetch(url, {
-          method: 'GET',
-          mode: 'cors', // Explicitly enable CORS
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        return await response.json();
-      } catch (err) {
-        if (i === maxRetries - 1) throw err; // Last retry failed
-        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1))); // Exponential backoff
-      }
-    }
-  };
-
-  useEffect(() => {
-    const fetchJobs = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await retryFetch('https://autopostnodejs.vercel.app/posts');
-        setJobs(data);
-        setFilteredJobs(data);
-      } catch (error) {
-        console.error('Error fetching jobs:', error);
-        setError(error.message.includes('CORS') ? 'Connection blocked. Please check backend CORS settings.' : 'Failed to load jobs. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchJobs();
-  }, []);
-
-  // Rest of your useEffects (filtering, observer) remain unchanged
-  useEffect(() => {
-    let filtered = jobs;
-
-    if (filters.search) {
-      filtered = filtered.filter(job =>
-        job.title.toLowerCase().includes(filters.search.toLowerCase()) ||
-        job.description.toLowerCase().includes(filters.search.toLowerCase())
-      );
-    }
-
-    if (filters.type) {
-      filtered = filtered.filter(job =>
-        job.description.toLowerCase().includes(filters.type.toLowerCase())
-      );
-    }
-
-    if (filters.location) {
-      filtered = filtered.filter(job => {
-        const location = job.description.match(/Locations: (.*?)(?=<br>|$)/i)?.[1] || '';
-        return location.toLowerCase().includes(filters.location.toLowerCase());
-      });
-    }
-
-    if (filters.date) {
-      filtered = [...filtered].sort((a, b) => {
-        const dateA = new Date(a.created_at);
-        const dateB = new Date(b.created_at);
-        return filters.date === 'newest' ? dateB - dateA : dateA - dateB;
-      });
-    }
-
-    setFilteredJobs(filtered);
-    setCurrentPage(1);
-  }, [filters, jobs]);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setAdsVisible(!entry.isIntersecting);
-      },
-      { threshold: 0.1 }
-    );
-
-    if (footerRef.current) {
-      observer.observe(footerRef.current);
-    }
-
-    return () => {
-      if (footerRef.current) {
-        observer.unobserve(footerRef.current);
-      }
-    };
-  }, []);
-
-  const indexOfLastJob = currentPage * jobsPerPage;
-  const indexOfFirstJob = indexOfLastJob - jobsPerPage;
-  const currentJobs = filteredJobs.slice(indexOfFirstJob, indexOfLastJob);
-
-  const totalPages = Math.ceil(filteredJobs.length / jobsPerPage);
-
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
-
-  const handleFilterChange = (e) => {
-    setFilters({ ...filters, [e.target.name]: e.target.value });
-  };
-
-  const handleTypeFilter = (type) => {
-    setFilters({ ...filters, type });
-  };
-
-  // Retry button handler
-  const handleRetry = () => {
-    setError(null);
+  const fetchJobs = async (page = 1) => {
     setLoading(true);
-    // Re-run fetchJobs from useEffect deps, but trigger manually
-    const fetchJobs = async () => {
-      try {
-        const data = await retryFetch('https://autopostnodejs.vercel.app/posts');
-        setJobs(data);
-        setFilteredJobs(data);
-        setError(null);
-      } catch (error) {
-        setError('Retry failed. Ensure backend CORS is configured.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchJobs();
+    try {
+      const res = await fetch(`${BACKEND_URL}?page=${page}`);
+      if (!res.ok) throw new Error('Failed to fetch');
+      
+      const data = await res.json();
+      
+      setJobs(data.jobs || []);
+      setCurrentPage(data.pagination.currentPage);
+      setTotalPages(data.pagination.totalPages);
+      setTotalJobs(data.pagination.totalJobs);
+    } catch (err) {
+      console.error(err);
+      setJobs([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Your existing SkeletonJob and Orb components remain unchanged
-  const SkeletonJob = () => (
-    <motion.div
-      className="bg-white/10 backdrop-blur-2xl p-6 rounded-2xl shadow-lg border border-blue-500/20"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6 }}
-    >
-      <div className="animate-pulse">
-        <div className="flex items-center mb-4">
-          <div className="w-12 h-12 bg-gray-300/20 rounded-full mr-4"></div>
-          <div className="flex-1">
-            <div className="h-5 bg-gray-300/20 rounded w-3/4 mb-2"></div>
-            <div className="h-4 bg-gray-300/20 rounded w-1/2"></div>
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  );
+  useEffect(() => {
+    fetchJobs(currentPage);
+  }, [currentPage]);
 
-  const Orb = ({ className, delay }) => (
-    <motion.div
-      className={`absolute rounded-full blur-3xl opacity-20 ${className}`}
-      animate={{
-        y: [0, -20, 0],
-        scale: [1, 1.1, 1],
-        opacity: [0.2, 0.3, 0.2]
-      }}
-      transition={{
-        duration: 5,
-        repeat: Infinity,
-        repeatType: 'loop',
-        delay
-      }}
-    />
-  );
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 text-gray-100">
-        <Helmet>
-          <title>Loading Jobs | AI-Powered Job Board</title>
-          <meta name="description" content="Discover thousands of verified job openings tailored to your skills. Loading the best opportunities for you." />
-          <meta property="og:title" content="Loading Jobs | AI-Powered Job Board" />
-          <meta property="og:description" content="Discover thousands of verified job openings tailored to your skills. Loading the best opportunities for you." />
-          <meta property="og:type" content="website" />
-        </Helmet>
-        <Navbar />
-        <div className="container mx-auto px-6 py-16 flex-grow flex flex-col items-center justify-center">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="text-center"
-          >
-            <div className="w-24 h-24 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mx-auto mb-6 animate-spin"></div>
-            <h1 className="text-3xl font-bold text-gray-100 mb-4">Loading Jobs...</h1>
-            <p className="text-gray-400">Finding the best opportunities for you</p>
-          </motion.div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-10 max-w-6xl w-full">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <SkeletonJob key={i} />
-            ))}
-          </div>
-        </div>
-        <div ref={footerRef}>
-          <Footer />
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 text-gray-100">
-        <Helmet>
-          <title>Error Loading Jobs | AI-Powered Job Board</title>
-          <meta name="description" content="Unable to load jobs at the moment. Please try again or check your connection." />
-          <meta property="og:title" content="Error Loading Jobs | AI-Powered Job Board" />
-          <meta property="og:description" content="Unable to load jobs at the moment. Please try again or check your connection." />
-          <meta property="og:type" content="website" />
-        </Helmet>
-        <Navbar />
-        <div className="container mx-auto px-6 py-16 flex-grow flex flex-col items-center justify-center">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="text-center"
-          >
-            <div className="w-24 h-24 bg-gradient-to-br from-red-500/20 to-yellow-500/20 rounded-full mx-auto mb-6 flex items-center justify-center">
-              <span className="text-4xl">⚠️</span>
-            </div>
-            <h3 className="text-xl font-bold text-gray-100 mb-3">Unable to Load Jobs</h3>
-            <p className="text-gray-400 max-w-xl mx-auto mb-6">{error}</p>
-            <motion.button
-              onClick={handleRetry}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-medium shadow-lg hover:shadow-blue-500/25 transition-all duration-300"
-            >
-              Retry Loading Jobs
-            </motion.button>
-            <p className="text-sm text-gray-500 mt-4">
-              If the issue persists, check your backend CORS configuration.
-            </p>
-          </motion.div>
-        </div>
-        <div ref={footerRef}>
-          <Footer />
-        </div>
-      </div>
-    );
-  }
-
-  // Pagination visible pages logic
-  const getVisiblePages = (total, current) => {
-    const maxVisible = 5;
-    const half = Math.floor(maxVisible / 2);
-    let start = Math.max(1, current - half);
-    let end = Math.min(total, start + maxVisible - 1);
-
-    if (end - start + 1 < maxVisible) {
-      start = Math.max(1, end - maxVisible + 1);
-    }
-
-    const pages = [];
-    if (start > 1) {
-      pages.push(1);
-      if (start > 2) pages.push('...');
-    }
-
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-
-    if (end < total) {
-      if (end < total - 1) pages.push('...');
-      pages.push(total);
-    }
-
-    return pages;
+  const generateSlug = (job) => {
+    if (!job?.id) return '#';
+    const title = (job.title || 'job').toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+    const company = (job.company_name || 'company').toLowerCase().replace(/[^a-z0-9]/g, '-');
+    const loc = (job.location || 'india').split(',')[0].toLowerCase().replace(/[^a-z0-9]/g, '-');
+    return `/job/${title}-${company}-${loc}-${job.id}`;
   };
 
-  const visiblePages = getVisiblePages(totalPages, currentPage);
+  const goToPage = (page) => {
+    if (page < 1 || page > totalPages || page === currentPage) return;
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const startJob = (currentPage - 1) * JOBS_PER_PAGE + 1;
+  const endJob = Math.min(currentPage * JOBS_PER_PAGE, totalJobs);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 text-gray-100">
+    <>
       <Helmet>
-        <title>Find Your Dream Job with AI Precision | AI-Powered Job Board</title>
-        <meta name="description" content="Discover thousands of verified job openings tailored to your skills. Search, filter, and apply to your next opportunity." />
-        <meta property="og:title" content="Find Your Dream Job with AI Precision | AI-Powered Job Board" />
-        <meta property="og:description" content="Discover thousands of verified job openings tailored to your skills. Search, filter, and apply to your next opportunity." />
-        <meta property="og:type" content="website" />
+        <title>{`Latest Jobs in India 2025 (Page ${currentPage}) | FirstJobly`}</title>
+        <meta name="description" content="10,000+ latest job openings in India - Freshers, Experienced, Remote, IT, Non-IT jobs updated daily." />
+        <meta property="og:title" content={`Latest Jobs in India 2025 (Page ${currentPage}) | FirstJobly`} />
+        <meta property="og:description" content="Freshers, Experienced, Remote, Walk-in, MNC Jobs - Updated Daily" />
       </Helmet>
+
       <Navbar />
-      <div className="mx-auto max-w-[1600px] px-6 pt-16 pb-8 flex-grow relative overflow-hidden lg:px-40">
 
-        {/* Animated Background Orbs */}
-        <Orb className="w-64 h-64 bg-blue-500 left-10 top-20" delay={0} />
-        <Orb className="w-80 h-80 bg-purple-500 right-20 top-40" delay={1} />
-        <Orb className="w-48 h-48 bg-pink-500 left-40 bottom-20" delay={2} />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 min-h-screen">
 
-        {/* Hero Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-10 relative z-10"
-        >
-          <motion.h1 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="text-4xl md:text-6xl font-bold text-gray-100 mb-4 leading-tight"
-          >
-            Find Your Dream Job{' '}
-            <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-500 bg-clip-text text-transparent">
-              with AI Precision
-            </span>
-          </motion.h1>
-          <motion.p 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="text-lg text-gray-400 max-w-2xl mx-auto"
-          >
-            Discover thousands of verified openings tailored to your skills.
-          </motion.p>
-        </motion.div>
+        {/* Hero */}
+        <div className="text-center mb-12">
+          <h1 className="text-5xl md:text-6xl font-bold text-white mb-4">
+            Latest <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600">Jobs in India 2025</span>
+          </h1>
+          <p className="text-xl text-gray-300">
+            Showing {startJob}–{endJob} of {totalJobs.toLocaleString()} jobs
+          </p>
+        </div>
 
-        {/* Search & Filters */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="bg-white/10 backdrop-blur-2xl p-4 rounded-xl shadow-lg border border-blue-500/20 mb-8"
-        >
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-            <motion.div whileHover={{ scale: 1.02 }} className="relative">
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <input
-                type="text"
-                name="search"
-                placeholder="Search jobs or companies..."
-                value={filters.search}
-                onChange={handleFilterChange}
-                className="w-full border border-white/20 bg-white/10 backdrop-blur-sm p-3 pl-10 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/30 focus:border-blue-400/50 text-gray-100 placeholder-gray-400 transition-all duration-300"
-              />
-            </motion.div>
-            <motion.div whileHover={{ scale: 1.02 }} className="relative">
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.243-4.243a8 8 0 1111.314 0z" />
-              </svg>
-              <input
-                type="text"
-                name="location"
-                placeholder="Filter by location..."
-                value={filters.location}
-                onChange={handleFilterChange}
-                className="w-full border border-white/20 bg-white/10 backdrop-blur-sm p-3 pl-10 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/30 focus:border-blue-400/50 text-gray-100 placeholder-gray-400 transition-all duration-300"
-              />
-            </motion.div>
-            <motion.div whileHover={{ scale: 1.02 }} className="relative">
-              <select
-                name="date"
-                value={filters.date}
-                onChange={handleFilterChange}
-                className="w-full border border-white/20 bg-white/10 backdrop-blur-sm p-3 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/30 focus:border-blue-400/50 text-gray-100 placeholder-gray-400 transition-all duration-300"
-              >
-                <option value="newest">Newest First</option>
-                <option value="oldest">Oldest First</option>
-              </select>
-            </motion.div>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            {['Remote', 'Full-time', 'Internship'].map(type => (
-              <motion.button
-                key={type}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => handleTypeFilter(type.toLowerCase())}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-                  filters.type === type.toLowerCase()
-                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/25'
-                    : 'bg-white/10 text-gray-400 hover:bg-white/20'
-                }`}
-              >
-                {type}
-              </motion.button>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Job Tiles */}
-        <AnimatePresence>
-          <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {currentJobs.map((job, index) => (
-              <motion.div
-                key={job.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ 
-                  y: -6, 
-                  scale: 1.05,
-                  boxShadow: "0 20px 40px -10px rgba(0, 0, 0, 0.2)"
-                }}
-                className="group bg-white/10 backdrop-blur-2xl p-6 rounded-2xl shadow-lg border border-blue-500/20 hover:shadow-xl transition-all duration-500"
-              >
-                <Link to={`/job/${job.id}`} className="block">
-                  <div className="flex items-start mb-4">
-                    {job.company_logo ? (
-                      <motion.img
-                        src={job.company_logo}
-                        alt="Company Logo"
-                        className="w-12 h-12 rounded-xl mr-5 flex-shrink-0 shadow-md"
-                        whileHover={{ scale: 1.1 }}
-                      />
-                    ) : (
-                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl mr-5 flex-shrink-0 flex items-center justify-center">
-                        <span className="text-white font-bold text-sm">🏢</span>
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <h2 className="text-lg font-bold text-gray-100 group-hover:text-blue-400 transition-all duration-300 line-clamp-2">
-                        {job.title}
-                      </h2>
-                      <p className="text-sm text-gray-400 mt-1 font-semibold">
-                        {job.company_name}
-                      </p>
-                      <p className="text-sm text-gray-400 mt-1">
-                        {job.description.match(/Locations: (.*?)(?=<br>|$)/i)?.[1] || 'Location not specified'}
-                      </p>
-                      <p className="text-sm text-gray-400">
-                        Posted {new Date(job.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
+        {/* Loading Skeleton */}
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {[...Array(12)].map((_, i) => (
+              <div key={i} className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 animate-pulse">
+                <div className="flex gap-6">
+                  <div className="w-20 h-20 bg-gray-700 rounded-2xl"></div>
+                  <div className="flex-1 space-y-4">
+                    <div className="h-8 bg-gray-700 rounded w-3/4"></div>
+                    <div className="h-6 bg-gray-700 rounded w-1/2"></div>
+                    <div className="h-5 bg-gray-700 rounded w-2/3"></div>
                   </div>
-                </Link>
-                <Link to={`/job/${job.id}`}>
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-medium text-sm shadow-lg hover:shadow-blue-500/25 transition-all duration-300"
-                  >
-                    Apply Now
-                  </motion.div>
-                </Link>
-              </motion.div>
+                </div>
+              </div>
             ))}
           </div>
-        </AnimatePresence>
-
-        {/* Pagination */}
-        {filteredJobs.length > jobsPerPage && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mt-10 flex justify-center items-center"
-          >
-            <div className="bg-white/10 backdrop-blur-xl p-3 rounded-xl shadow-lg border border-blue-500/20 flex items-center space-x-2">
-              {currentPage > 1 && (
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => paginate(currentPage - 1)}
-                  className="px-5 py-2 rounded-lg font-medium text-sm bg-white/10 text-gray-400 hover:bg-white/20 transition-all duration-300"
-                >
-                  Previous
-                </motion.button>
-              )}
-              {visiblePages.map((pageNum, index) => (
-                <React.Fragment key={index}>
-                  {pageNum === '...' ? (
-                    <span className="px-3 py-2 text-gray-400">...</span>
-                  ) : (
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => paginate(pageNum)}
-                      className={`px-5 py-2 rounded-lg font-medium text-sm transition-all duration-300 ${
-                        currentPage === pageNum
-                          ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/25'
-                          : 'bg-white/10 text-gray-400 hover:bg-white/20'
-                      }`}
-                    >
-                      {pageNum}
-                    </motion.button>
-                  )}
-                </React.Fragment>
+        ) : jobs.length === 0 ? (
+          <div className="text-center py-20">
+            <p className="text-2xl text-gray-400">No jobs found. Check back later!</p>
+          </div>
+        ) : (
+          <>
+            {/* 2×12 Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+              {jobs.map(job => (
+                <JobCard key={job.id} job={job} generateSlug={generateSlug} />
               ))}
-              {currentPage < totalPages && (
-                <>
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => paginate(currentPage + 1)}
-                    className="px-5 py-2 rounded-lg font-medium text-sm bg-white/10 text-gray-400 hover:bg-white/20 transition-all duration-300"
-                  >
-                    Next &gt;
-                  </motion.button>
-                  {totalPages > 5 && (
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => paginate(totalPages)}
-                      className="px-5 py-2 rounded-lg font-medium text-sm bg-white/10 text-gray-400 hover:bg-white/20 transition-all duration-300"
-                    >
-                      Last &gt;&gt;
-                    </motion.button>
-                  )}
-                </>
-              )}
             </div>
-          </motion.div>
+
+            {/* Google AdSense after every even page */}
+            {currentPage % 2 === 0 && (
+              <div className="my-20 bg-gray-800/50 backdrop-blur border border-gray-700 rounded-3xl p-8 text-center shadow-2xl">
+                <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3395385581782112"
+                        crossOrigin="anonymous"></script>
+                <ins className="adsbygoogle"
+                     style={{ display: 'block' }}
+                     data-ad-client="ca-pub-3395385581782112"
+                     data-ad-slot="1442016748"
+                     data-ad-format="auto"
+                     data-full-width-responsive="true"></ins>
+                <script dangerouslySetInnerHTML={{ __html: `(adsbygoogle = window.adsbygoogle || []).push({});` }} />
+              </div>
+            )}
+          </>
         )}
 
-        {filteredJobs.length === 0 && !loading && !error && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="text-center py-16"
-          >
-            <div className="w-24 h-24 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full mx-auto mb-6 flex items-center justify-center">
-              <span className="text-4xl">🔍</span>
-            </div>
-            <h3 className="text-xl font-bold text-gray-100 mb-3">No jobs found</h3>
-            <p className="text-gray-400 max-w-xl mx-auto">
-              Try adjusting your search filters or check back later.
-            </p>
-          </motion.div>
+        {/* Professional Pagination */}
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center gap-4 mt-24 flex-wrap">
+            <button
+              onClick={() => goToPage(currentPage - 1)}
+              disabled={currentPage === 1}
+              className={`px-8 py-4 rounded-xl font-bold text-lg transition-all ${currentPage === 1 
+                ? 'bg-gray-700 text-gray-500 cursor-not-allowed' 
+                : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white shadow-xl'}`}
+            >
+              Previous
+            </button>
+
+            {/* Page Numbers */}
+            {Array.from({ length: Math.min(7, totalPages) }, (_, i) => {
+              let pageNum;
+              if (totalPages <= 7) {
+                pageNum = i + 1;
+              } else if (currentPage <= 4) {
+                pageNum = i + 1;
+              } else if (currentPage >= totalPages - 3) {
+                pageNum = totalPages - 6 + i;
+              } else {
+                pageNum = currentPage - 3 + i;
+              }
+
+              if (pageNum > totalPages) return null;
+
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => goToPage(pageNum)}
+                  className={`w-14 h-14 rounded-xl font-bold text-lg transition-all ${
+                    currentPage === pageNum
+                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-2xl scale-110'
+                      : 'bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white shadow-lg'
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+
+            {totalPages > 7 && currentPage < totalPages - 3 && (
+              <>
+                <span className="text-gray-500 text-2xl">...</span>
+                <button onClick={() => goToPage(totalPages)} className="w-14 h-14 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold">
+                  {totalPages}
+                </button>
+              </>
+            )}
+
+            <button
+              onClick={() => goToPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className={`px-8 py-4 rounded-xl font-bold text-lg transition-all ${currentPage === totalPages 
+                ? 'bg-gray-700 text-gray-500 cursor-not-allowed' 
+                : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-xl'}`}
+            >
+              Next
+            </button>
+          </div>
         )}
       </div>
 
-      {/* Ad Placeholders */}
-      <motion.div
-        animate={{ opacity: adsVisible ? 1 : 0 }}
-        transition={{ duration: 0.3 }}
-        className="hidden lg:block fixed left-0 top-16 w-32 h-[100vh] bg-white/10 border-r border-blue-500/20 rounded-r-xl backdrop-blur-2xl flex items-center justify-center"
-      >
-        <div>
-          <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3395385581782112"
-            crossorigin="anonymous"></script>
-          <ins className="adsbygoogle"
-            style={{display: 'block'}}
-            data-ad-client="ca-pub-3395385581782112"
-            data-ad-slot="1442016748"
-            data-ad-format="auto"
-            data-full-width-responsive="true"></ins>
-          <script>
-            (adsbygoogle = window.adsbygoogle || []).push({});
-          </script>
-        </div>
-      </motion.div>
-      <motion.div
-        animate={{ opacity: adsVisible ? 1 : 0 }}
-        transition={{ duration: 0.3 }}
-        className="hidden lg:block fixed right-0 top-16 w-32 h-[100vh] bg-white/10 border-l border-blue-500/20 rounded-l-xl backdrop-blur-2xl flex items-center justify-center"
-      >
-        <div>
-          <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3395385581782112"
-            crossorigin="anonymous"></script>
-          <ins className="adsbygoogle"
-            style={{display: 'block'}}
-            data-ad-client="ca-pub-3395385581782112"
-            data-ad-slot="1442016748"
-            data-ad-format="auto"
-            data-full-width-responsive="true"></ins>
-          <script>
-            (adsbygoogle = window.adsbygoogle || []).push({});
-          </script>
-        </div>
-      </motion.div>
-
-      <div ref={footerRef}>
-        <Footer />
-      </div>
-    </div>
+      <Footer />
+    </>
   );
 }
+
+// Beautiful Job Card (unchanged)
+const JobCard = ({ job, generateSlug }) => {
+  const skills = Array.isArray(job.skills)
+    ? job.skills
+    : typeof job.skills === 'string' ? JSON.parse(job.skills || '[]') : [];
+
+  return (
+    <motion.div
+      whileHover={{ y: -12, scale: 1.02 }}
+      className="bg-white/10 backdrop-blur-2xl rounded-3xl p-8 border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-500 group"
+    >
+      <Link to={generateSlug(job)}>
+        <div className="flex gap-6">
+          <div className="flex-shrink-0">
+            {job.company_logo ? (
+              <img src={job.company_logo} alt={job.company_name} className="w-20 h-20 rounded-2xl object-contain bg-white/20 p-3 shadow-lg" loading="lazy" />
+            ) : (
+              <div className="w-20 h-20 bg-gradient-to-br from-cyan-500 to-purple-600 rounded-2xl flex items-center justify-center text-3xl font-bold text-white shadow-lg">
+                {job.company_name?.[0] || 'C'}
+              </div>
+            )}
+          </div>
+
+          <div className="flex-1">
+            <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-cyan-400 transition">
+              {job.title || 'Job Title'}
+            </h3>
+            <p className="text-xl font-semibold text-cyan-400 mb-3">{job.company_name || 'Company'}</p>
+
+            <div className="flex flex-wrap gap-4 text-gray-300 mb-4 text-base">
+              <span>Location: {job.location || 'Multiple Locations'}</span>
+              <span>Experience: {job.experience || 'Any'}</span>
+              {job.remote_type && <span className="text-green-400 font-medium">{job.remote_type}</span>}
+            </div>
+
+            <div className="flex flex-wrap gap-2 mb-5">
+              {skills.slice(0, 5).map((s, i) => (
+                <span key={i} className="px-4 py-2 bg-cyan-500/20 text-cyan-300 rounded-full text-sm border border-cyan-500/50">
+                  {s}
+                </span>
+              ))}
+              {skills.length > 5 && <span className="text-gray-400 text-sm">+{skills.length - 5} more</span>}
+            </div>
+
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-400">
+                {new Date(job.created_at || job.posted_date).toLocaleDateString('en-IN')}
+              </span>
+              <span className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-purple-600 text-white font-bold rounded-xl shadow-xl hover:shadow-cyan-500/50 transition transform hover:scale-105">
+                View Details
+              </span>
+            </div>
+          </div>
+        </div>
+      </Link>
+    </motion.div>
+  );
+};
 
 export default Home;
