@@ -6,7 +6,7 @@ import { Helmet } from 'react-helmet-async';
 import Navbar from './Navbar';
 import Footer from './Footer';
 
-const BACKEND_URL = 'https://autoback-pearl.vercel.app/posts';
+const BACKEND_URL = 'https://autoback-cakl.vercel.app/posts';
 const JOBS_PER_PAGE = 24;
 
 function Home() {
