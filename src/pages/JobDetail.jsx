@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import Navbar from './Navbar';
 import Footer from './Footer';
 
-const BACKEND_URL = 'https://autoback-pearl.vercel.app/posts';
+const BACKEND_URL = 'https://autoback-cakl.vercel.app/posts';
 
 function JobDetail() {
   const { slug } = useParams();
